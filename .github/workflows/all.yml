@@ -38,14 +38,6 @@ jobs:
           curl -sSL https://cli.bearer.sh/install.sh | bash
           export PATH=$HOME/.bearer/bin:$PATH
 
-      # 5️⃣ Install Stack Analyser
-      - name: Install Stack Analyser
-        run: |
-          git clone https://github.com/specfy/stack-analyser.git
-          cd stack-analyser
-          pip install -r requirements.txt
-          cd ..
-
       # 6️⃣ Flake8 lint
       - name: Flake8 lint
         run: |
@@ -71,11 +63,7 @@ jobs:
         run: |
           bearer scan --json-output bearer-report.json || true
 
-      # 1️⃣1️⃣ Stack Analyser scan
-      - name: Stack Analyser scan
-        run: |
-          python stack-analyser/stack_analyser.py --output stack-analyser-report.json || true
-
+     
       # 1️⃣2️⃣ Initialize CodeQL
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -104,5 +92,4 @@ jobs:
             safety-report.txt
             semgrep-report.json
             bearer-report.json
-            stack-analyser-report.json
             codeql-results
