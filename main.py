@@ -6,7 +6,7 @@ import os
 app = Flask(__name__)
 
 # =========================
-# 🔥 Hardcoded secrets
+# 🔥 Hardcoded secrets sadsd
 # =========================
 app.secret_key = "super-secret-dev-key-12345"
 DB_PASSWORD = "rootpassword"

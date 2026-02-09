@@ -1,0 +1,76 @@
+name: Full Security & Quality Scans
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  full-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    strategy:
+      matrix:
+        language: ['python']
+
+    steps:
+      # 1️⃣ Checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3️⃣ Install dependencies
+      - name: Install dependencies
+        run: |
+          pip install flask flake8 bandit safety
+
+      # 4️⃣ Lint with flake8 and save report
+      - name: Flake8 lint
+        run: |
+          flake8 . --format=html --htmldir=flake8-report || true
+
+      # 5️⃣ Bandit security scan
+      - name: Bandit scan
+        run: |
+          bandit -r . -f html -o bandit-report.html || true
+
+      # 6️⃣ Dependency scan with Safety
+      - name: Safety dependency scan
+        run: |
+          safety check --full-report > safety-report.txt || true
+
+      # 7️⃣ Initialize CodeQL
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      # 8️⃣ Autobuild CodeQL
+      - name: CodeQL Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      # 9️⃣ Analyze CodeQL and save SARIF
+      - name: CodeQL analyze
+        id: analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          output: codeql-results
+
+      # 🔟 Upload all reports as artifacts
+      - name: Upload all scan reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-security-reports
+          path: |
+            flake8-report/
+            bandit-report.html
+            safety-report.txt
+            codeql-results
