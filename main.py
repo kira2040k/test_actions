@@ -102,7 +102,7 @@ def read_file():
         with open(name, "r") as f:
             return f.read()
     except:
-        return "File not found"
+        return "File not foun2d"
 
 
 # =========================
