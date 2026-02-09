@@ -28,43 +28,72 @@ jobs:
           python-version: "3.11"
 
       # 3️⃣ Install dependencies
-      - name: Install dependencies
+      - name: Install Python tools
         run: |
-          pip install flask flake8 bandit safety
+          pip install flask flake8 bandit safety semgrep
 
-      # 4️⃣ Lint with flake8 and save report
+      # 4️⃣ Install Bearer CLI
+      - name: Install Bearer CLI
+        run: |
+          curl -sSL https://cli.bearer.sh/install.sh | bash
+          export PATH=$HOME/.bearer/bin:$PATH
+
+      # 5️⃣ Install Stack Analyser
+      - name: Install Stack Analyser
+        run: |
+          git clone https://github.com/specfy/stack-analyser.git
+          cd stack-analyser
+          pip install -r requirements.txt
+          cd ..
+
+      # 6️⃣ Flake8 lint
       - name: Flake8 lint
         run: |
           flake8 . --format=html --htmldir=flake8-report || true
 
-      # 5️⃣ Bandit security scan
+      # 7️⃣ Bandit security scan
       - name: Bandit scan
         run: |
           bandit -r . -f html -o bandit-report.html || true
 
-      # 6️⃣ Dependency scan with Safety
+      # 8️⃣ Safety dependency scan
       - name: Safety dependency scan
         run: |
           safety check --full-report > safety-report.txt || true
 
-      # 7️⃣ Initialize CodeQL
+      # 9️⃣ Semgrep scan
+      - name: Semgrep scan
+        run: |
+          semgrep --config=auto --json --output semgrep-report.json || true
+
+      # 🔟 Bearer CLI scan
+      - name: Bearer scan
+        run: |
+          bearer scan --json-output bearer-report.json || true
+
+      # 1️⃣1️⃣ Stack Analyser scan
+      - name: Stack Analyser scan
+        run: |
+          python stack-analyser/stack_analyser.py --output stack-analyser-report.json || true
+
+      # 1️⃣2️⃣ Initialize CodeQL
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
 
-      # 8️⃣ Autobuild CodeQL
+      # 1️⃣3️⃣ CodeQL Autobuild
       - name: CodeQL Autobuild
         uses: github/codeql-action/autobuild@v3
 
-      # 9️⃣ Analyze CodeQL and save SARIF
+      # 1️⃣4️⃣ CodeQL analyze
       - name: CodeQL analyze
         id: analyze
         uses: github/codeql-action/analyze@v3
         with:
           output: codeql-results
 
-      # 🔟 Upload all reports as artifacts
+      # 1️⃣5️⃣ Upload all scan reports
       - name: Upload all scan reports
         uses: actions/upload-artifact@v4
         with:
@@ -73,4 +102,7 @@ jobs:
             flake8-report/
             bandit-report.html
             safety-report.txt
+            semgrep-report.json
+            bearer-report.json
+            stack-analyser-report.json
             codeql-results

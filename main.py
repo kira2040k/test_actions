@@ -76,7 +76,7 @@ def login():
 
 
 # =========================
-# ❌ SSTI vulnerable
+# ❌ SSTI vulnerabled
 # =========================
 @app.route("/search")
 def search():
